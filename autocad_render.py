@@ -8,7 +8,7 @@ class Cube():
     def __init__(self, width, height) :
         self.width = width
         self.height = height
-        self.vertices = 4
+        self.vertices = 4   
     
 
     def calculate_distance(self):
@@ -40,6 +40,7 @@ class Cube():
                 x=self.tlxy[0]+self.width
                 y=self.tlxy[1]
                 z=0
+                
             
             self.crd = [x, y, z]
     
@@ -53,8 +54,18 @@ class Cube():
         texy=tuple(exy)
         return texy
     
+    def mini_cube(self):
+        self.mini_cube = Cube(self.width/2, self.height/2   )
+        x, y =  self.tlxy
+        self.mini_cube.tlxy = (x+self.width/4, y+self.height/4)
+        exy=self.mini_cube.calculate_exy()
+        texy=self.mini_cube.texy(exy)
+        polygon = aDouble(texy)
+        polygond = acad.model.AddPolyline(polygon)
+
 def add_cube(width:float, height:float):
     global cubes
+    
     cube=Cube(width, height)
     cube.calculate_distance()
     exy=cube.calculate_exy()
@@ -62,7 +73,8 @@ def add_cube(width:float, height:float):
     polygon = aDouble(texy)
     polygond = acad.model.AddPolyline(polygon)
     cubes["cube_"+str(len(cubes)+1)]=cube
-
+    if len(cubes)==3 or len(cubes)==2:
+        cube.mini_cube()
 
 polygon_1 = add_cube(12.5, 12.5)
 
