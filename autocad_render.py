@@ -1,83 +1,85 @@
-from pyautocad import Autocad, APoint, aDouble
+from pyautocad import Autocad, aDouble
 
 acad = Autocad(create_if_not_exists=True)
 cubes={}
 
 class Cube():
-
-    def __init__(self, width, height) :
-        self.width = width
-        self.height = height
-        self.vertices = 4   
-    
-
-    def calculate_distance(self):
+    def __init__(self, size):
         global cubes
-        x, y = 0.0, 0.0
+        self.width, self.height, self.depth = size
+        
+
+    def create_cube(self):
+        x, y, z = self.x, self.y, self.z
+        width, height, depth = self.width, self.height, self.depth
+        pmatrx = aDouble(x, z, y, 
+                         x+width, z, y, 
+                         x, z+depth, y, 
+                         x+width, z+depth, y, 
+                         x, z+depth, y+height, 
+                         x+width, z+depth, y+height, 
+                         x, z, y+height, 
+                         x+width, z, y+height, 
+                         x, z, y, 
+                         x+width, z, y,
+                         x+width, z, y,
+                         x+width, z+depth, y,
+                         x+width, z, y+height,
+                         x+width, z+depth, y+height,
+                         x, z, y+height,
+                         x, z+depth, y+height,
+                         x, z, y,
+                         x, z+depth, y,
+                         )
+        
+        
+        return pmatrx
+
+    def xyz(self):
+        global cubes
+        self.x, self.y, self.z = 0, 0, 0
         if len(cubes)!=0:
+
             for cube in cubes:
-                width = cubes[cube].width
-                x = x+width
-                y = y
-        self.tlxy = (x, y)
+                self.x += cubes[cube].width
 
-    def calculate_exy(self):
-        exy=[]
-        for vertice in range(0, self.vertices*2):                                             
-            if vertice==0:
-                x=self.tlxy[0]
-                y=self.tlxy[1]
-                z=0
-            elif vertice==1:
-                x=self.tlxy[0]
-                y=self.tlxy[1]+self.height
-                z=0
-            elif vertice==2:
-                x=self.tlxy[0]+self.width
-                y=self.tlxy[1]+self.height
-                z=0
-            elif vertice==3:
-                x=self.tlxy[0]+self.width
-                y=self.tlxy[1]
-                z=0
-                
-            
-            self.crd = [x, y, z]
-    
-            exy.extend(self.crd)
-        fp = [self.tlxy[0], self.tlxy[1], 0]
-        exy.extend(fp)
 
-        return exy
-    
-    def texy(self, exy):
-        texy=tuple(exy)
-        return texy
-    
     def mini_cube(self):
-        self.mini_cube = Cube(self.width/2, self.height/2   )
-        x, y =  self.tlxy
-        self.mini_cube.tlxy = (x+self.width/4, y+self.height/4)
-        exy=self.mini_cube.calculate_exy()
-        texy=self.mini_cube.texy(exy)
-        polygon = aDouble(texy)
-        polygond = acad.model.AddPolyline(polygon)
+        if len(cubes)==3:
+            self.mini_cube = Cube((self.width/2, self.height, self.depth/2))
+            self.mini_cube.x, self.mini_cube.y, self.mini_cube.z = self.x + self.width/4, self.y, self.z + self.depth/4
+            mini_matrx=self.mini_cube.create_cube()
+            mini_mesh = acad.model.Add3DMesh(5 , 2, mini_matrx)
 
-def add_cube(width:float, height:float):
+def deploy_cube():
     global cubes
-    
-    cube=Cube(width, height)
-    cube.calculate_distance()
-    exy=cube.calculate_exy()
-    texy=cube.texy(exy)
-    polygon = aDouble(texy)
-    polygond = acad.model.AddPolyline(polygon)
-    cubes["cube_"+str(len(cubes)+1)]=cube
-    if len(cubes)==3 or len(cubes)==2:
-        cube.mini_cube()
+    cube = Cube((10, 10, 10))
+    cube.xyz()
+    cubes["cube",str(len(cubes)+1)] = cube
+    matrx = cube.create_cube()
 
-polygon_1 = add_cube(12.5, 12.5)
+    mesh = acad.model.Add3DMesh(5 , 2, matrx)
 
-polygon_2 = add_cube(12.5, 12.5)
+cube=Cube((10, 10, 10))
+cube.xyz()
+cubes["cube",str(len(cubes)+1)] = cube
+matrx = cube.create_cube()
+cube.mini_cube()
 
-polygon_3 = add_cube(12.5, 12.5)
+mesh1 = acad.model.Add3DMesh(9 , 2, matrx)
+
+cube2 = Cube((20, 20, 10))
+cube2.xyz()
+cubes["cube",str(len(cubes)+1)] = cube2
+matrx2 = cube2.create_cube()
+cube2.mini_cube()
+
+mesh2 = acad.model.Add3DMesh(9 , 2, matrx2)
+
+cube3 = Cube((10, 10, 10))
+cube3.xyz()
+cubes["cube",str(len(cubes)+1)] = cube3
+matrx3 = cube3.create_cube()
+cube3.mini_cube()
+
+mesh3 = acad.model.Add3DMesh(9 , 2, matrx3)
